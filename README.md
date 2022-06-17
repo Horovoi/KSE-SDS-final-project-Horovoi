@@ -1,10 +1,7 @@
-# [PUT YOUR PROJECT TITLE HERE]
+# How much Ukrainian economy will contract?
 
-Edit this README.md file to describe your project briefly. Your description should address three issues:
+My goal is to estimate a contraction of Ukrainian GDP due to russian invasion using various nowcasting models based on ML algorithms.
 
-1. What's your question/topic/idea.
-2. Data and analytics:
-   -  Data set — small & simple.
-   -  Analysis or summary — table, graph, etc.
-3. Format:
-   -  Slide deck/article/website.
+For this project, I use quarterly data on 17 macroeconomics indicators. Time series were seasonaly adjusted if necessary. Sources for the data are National Bank of Ukraine and State Statistical Service of Ukraine.
+
+It is estimated that mean estimated Real GDP shrinkage in 2022 due to the war is -39.63% comparing to 2021.
