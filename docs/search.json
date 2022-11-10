@@ -1,0 +1,51 @@
+[
+  {
+    "objectID": "index.html#the-gdp-will-shrink",
+    "href": "index.html#the-gdp-will-shrink",
+    "title": "How much Ukrainian economy will contract?",
+    "section": "The GDP will shrink…",
+    "text": "The GDP will shrink…\n\n… by -38.93 % on average.\n\n\nThank you for your attention!"
+  },
+  {
+    "objectID": "index.html#my-approach",
+    "href": "index.html#my-approach",
+    "title": "How much Ukrainian economy will contract?",
+    "section": "My approach",
+    "text": "My approach\n\nTrain five popular machine learning algorithms on a test set\n\n“Evaluation on a rolling forecasting origin”\n\nForecast exogenous variables from 2022Q2 to 2022Q4\n\nUsing “optimal” ARIMA model (Hyndman-Khandakar algorithm)\n\nCompare train accuracy\nEstimate Real GDP growth rate for 2022Q2 — 2022Q4\nCalculate GDP contraction for the whole year"
+  },
+  {
+    "objectID": "index.html#the-models",
+    "href": "index.html#the-models",
+    "title": "How much Ukrainian economy will contract?",
+    "section": "The Models",
+    "text": "The Models\n\nMachine Learning models:\n\nElastic-Net\nClassical linear regression\nMultivariate Adaptive Regression Spline\nExtreme Gradient Boosting\nBayesian Regularized Neural Network\n\nBenchmark:\n\nARIMA"
+  },
+  {
+    "objectID": "index.html#the-data",
+    "href": "index.html#the-data",
+    "title": "How much Ukrainian economy will contract?",
+    "section": "The Data",
+    "text": "The Data\n\n2015Q1 to 2022Q1\nQuarterly, seasonaly adjusted\n17 macro indicators\nPrincipal components transformation"
+  },
+  {
+    "objectID": "index.html#forecasting-perfomance-of-models",
+    "href": "index.html#forecasting-perfomance-of-models",
+    "title": "How much Ukrainian economy will contract?",
+    "section": "Forecasting perfomance of models",
+    "text": "Forecasting perfomance of models\nElastic-Net and Gradient boosting provide the best results\n\nPlotTest accuracy\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nRMSE\nMAE\nMPE\nMAPE\n\n\n\n\nglmnet.mod\n3.54\n2.43\n17.37\n217.63\n\n\nlm.mod\n3.01\n2.12\n47.06\n245.18\n\n\nearth.mod\n3.45\n2.42\n-82.89\n302.09\n\n\nbrnn.mod\n2.35\n1.72\n-20.31\n62.63"
+  },
+  {
+    "objectID": "index.html#gdp-contraction",
+    "href": "index.html#gdp-contraction",
+    "title": "How much Ukrainian economy will contract?",
+    "section": "GDP contraction",
+    "text": "GDP contraction\nThe mean estimated Real GDP shrinkage due to the war is -38.93 %.\n\n\n\n\n\n\nglmnet.mod\nlm.mod\nearth.mod\nbrnn.mod\narima\n\n\n\n\ncontraction\n-29.34\n-47.68\n-29.16\n-51.04\n-37.45"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "1 + 1\n\n[1] 2"
+  }
+]

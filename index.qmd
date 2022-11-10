@@ -1,0 +1,333 @@
+---
+title: "How much Ukrainian economy will contract?"
+subtitle: "(Spoiler: a lot)"
+author: "Mykyta Horovoi"
+format:
+  revealjs: 
+    slide-number: true
+    logo: images/KSE.png
+---
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+# Load packages 
+libs <- c("tidyverse", "tibble", "tsibble", "stargazer", "tseries", "feasts", "fable", "readxl", "lubridate", "caret", "doParallel", "lattice", "tsibbledata", "openxlsx", "seasonal")
+
+lapply(libs, require, character.only = TRUE)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+xlsx <- loadWorkbook('data/data_macro.xlsx')
+
+# Extract sheets' name to make them indexable for loops
+sheet_names <- sheets(xlsx)
+
+for(i in 1:length(sheet_names)) {
+  assign(paste0("df_", sheet_names[i]), readWorkbook(xlsx, sheet = i, detectDates = TRUE))
+}
+
+# Convert to tsibble
+df_Month[1:87,] %>% mutate(Date = yearmonth(Date)) %>% as_tsibble(index = Date) -> data_m_tbl
+df_Quater %>% mutate(Date = yearquarter(Date)) %>% as_tsibble(index = Date) -> data_q_tbl
+
+# Aggregate monthly data for levels into quarterly one
+data_m_tbl %>%
+  index_by(year_quarter = ~ yearquarter(.)) %>% select(ends_with("lvl")) %>%
+  summarise_all(mean) %>% select(-Date) %>% rename(Date = year_quarter) -> data_temp_lvl
+
+# Aggregate monthly data for rates into quarterly one
+data_m_tbl %>%
+  index_by(year_quarter = ~ yearquarter(.)) %>% select(!ends_with("lvl")) %>%
+  summarise_all(mean) %>% select(-Date) %>% rename(Date = year_quarter)  -> data_temp_rate
+
+# Merge all quarterly data into one data set
+data_temp_all <- full_join(data_temp_lvl, data_temp_rate, by = "Date")
+data_all_q_tbl <- full_join(data_temp_all, data_q_tbl, by = "Date")
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+# Select data for the model estimation
+
+df_mod <- data_all_q_tbl %>% select(Date, retail_lvl:const_lvl, im_tot_mom, ex_tot_mom, mb_lvl:cpi_rate, retail_rate_y, ipi_rate, ppi_rate, const_mom:impi_rate, expi_rate, int_over, unem_rate, disp_inc, gdp_real_gr)
+
+# Add missing data for 2022 Q1 using ARIMA forecast
+df_mod %>% select(unem_rate, disp_inc) -> df_aux
+
+df_mod[1:28, c(1,16)] %>% model(auto = ARIMA(stepwise = FALSE, greedy = FALSE)) %>%
+  forecast(h = 1) -> df_aux
+df_mod[29,16] <- df_aux[4]
+
+df_mod[1:28, c(1,17)] %>% model(auto = ARIMA(stepwise = FALSE, greedy = FALSE)) %>%
+  forecast(h = 1) -> df_aux
+df_mod[29,17] <- df_aux[4]
+
+# Divide the data to a train set (up to 2022 Q1) and test set (2022 Q2 ~ 2022 Q4)
+train_df <- df_mod[1:29,]
+test_df <- df_mod %>% setdiff(train_df)
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+# Seasonal adjustment of the data using X_13 approach 
+train_adjust_df <- train_df
+seas_list <- list()
+x_13_list <- list()
+not_seas <- c(4, 7, 9, 11) # indexes of variable with no seasonality
+
+for(i in 2:length(train_adjust_df)) {
+  if (!(i %in% not_seas)) {
+     seas_list[[(i-1)]] <- train_adjust_df[,c(1,i)] %>% model(X_13ARIMA_SEATS())
+     seas_list[[(i-1)]] %>% components(seas_list[[(i-1)]]) %>%
+       select(season_adjust) -> x_13_list[[(i-1)]]
+     train_adjust_df[,i] <- x_13_list[[(i-1)]][,1] 
+  }
+}
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+# Forecast exogenous variables on the period from 2022 Q2 to 2022 Q4 using optimal ARIMA models
+fit_list <- list()
+arima_list <- list()
+
+for(i in 2:length(train_adjust_df)) {
+  fit_list[[(i-1)]] <- train_adjust_df[,c(1,i)] %>% model(auto = ARIMA(stepwise = FALSE,
+                                                                greedy = FALSE))
+  fit_list[[(i-1)]] %>% forecast(h = nrow(test_df)) -> arima_list[[(i-1)]]
+  
+  test_df[,i] <- arima_list[[(i-1)]][,4]
+}
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+# Set up parallel computing using 2 cores
+registerDoParallel(cores = 2)
+
+# Set parameters for training models
+myTimeControl <- trainControl(method = "timeslice",
+                              initialWindow = 12,
+                              horizon = 2,
+                              fixedWindow = FALSE,
+                              allowParallel = TRUE,
+                              preProcess(train_df, c('scale', 'center', 'pca')),
+                              preProcOptions = list(thresh = 0.95))
+                              #seeds = seeds)
+tuneLength.num <- 5
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+# Estimate ML models using Principal Components method
+
+# Elastic-Net Regularized Generalized Linear Model
+glmnet.mod <- train(gdp_real_gr ~ . - Date,
+                    data = train_adjust_df,
+                    method = "glmnet",
+                    family = "gaussian",
+                    trControl = myTimeControl,
+                    tuneLength = tuneLength.num,
+                    metric = 'RMSE',
+                    preProcess = c('scale', 'center', 'pca'))
+
+# Ordinary linear model
+lm.mod <- train(gdp_real_gr ~ . - Date,
+                data = train_adjust_df,
+                method = "lm",
+                trControl = myTimeControl,
+                tuneLength = tuneLength.num,
+                metric = 'RMSE',
+                preProcess = c('scale', 'center', 'pca'))
+
+# Multivariate Adaptive Regression Spline
+earth.mod <- train(gdp_real_gr ~ . - Date,
+                   data = train_adjust_df,
+                   method = "earth",
+                   trControl = myTimeControl,
+                   tuneLength=tuneLength.num,
+                   metric = 'RMSE',
+                   preProcess = c('scale', 'center', 'pca'))
+
+
+
+# Bayesian Regularized Neural Network model
+brnn.mod <- train(gdp_real_gr ~ . - Date,
+                   data = train_adjust_df,
+                   method = "brnn",
+                   trControl = myTimeControl,
+                   tuneLength=tuneLength.num,
+                   metric='RMSE',
+                   preProcess = c('scale', 'center', 'pca'))
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+resamps <- resamples(list(glmnet = glmnet.mod,
+                          lm = lm.mod,
+                          earth = earth.mod,
+                          brnn = brnn.mod))
+
+s <- summary(resamps)
+
+knitr::kable(s[[3]]$RMSE)
+
+trellis.par.set(caretTheme())
+dotplot(resamps, metric = "RMSE")
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+# Extract model names
+mod_names <- c("glmnet.mod", "lm.mod", "earth.mod", "brnn.mod")
+
+pred_list <- list()
+
+df_full <- bind_rows(train_adjust_df, test_df)
+
+# Predict a GDP change using forecasted exogenous variables
+for (i in 1:length(mod_names)) {
+  pred_list[[i]] <- predict(get(mod_names[i]), df_full) 
+}
+
+# Convert predictions into ts format
+ts_pred_list <- lapply(pred_list, function(x){ts(x, start = c(2015, 1), frequency = 4)})
+ts_orig <- ts(df_mod$gdp_real_gr, start = c(2015, 1), frequency = 4)
+names(ts_pred_list) <- mod_names
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+# Calculate models' accuracy based on test data
+acc_list <- matrix(0, nrow = length(ts_pred_list), ncol = 5)
+
+for (i in 1:length(ts_pred_list)) {
+  acc_list[i,] <- forecast::accuracy(ts_pred_list[[i]][1:29], train_adjust_df$gdp_real_gr)
+}
+acc_list <- as.data.frame(acc_list)
+colnames(acc_list) <- c("ME", "RMSE", "MAE", "MPE", "MAPE")
+rownames(acc_list) <- mod_names
+```
+
+```{r}
+#| echo: false
+#| warning: false
+#| output: false
+
+# Calculate GDP contraction
+contraction <- numeric()
+
+for(i in 1:length(mod_names)) {
+  contraction[i] <- sum(tail(ts_pred_list[[i]], 4))
+}
+
+contraction_df <- t(data.frame(contraction))
+contraction_df <- as.data.frame(contraction_df)
+colnames(contraction_df) <- mod_names
+contraction_df$arima <- sum(tail(df_full$gdp_real_gr, 4))
+```
+
+## The GDP will shrink...
+
+::: {.fragment .fade-in}
+... by `r round(mean(t(contraction_df)), 2)` % on average.
+:::
+
+::: {.fragment .fade-in}
+Thank you for your attention!
+:::
+
+::: {.fragment .fade-in}
+![](images/work.jpg){fig-align="center"}
+:::
+
+## My approach
+
+-   Train five popular machine learning algorithms on a test set
+    -   "Evaluation on a rolling forecasting origin"
+-   Forecast exogenous variables from 2022Q2 to 2022Q4
+    -   Using "optimal" ARIMA model (Hyndman-Khandakar algorithm)
+-   Compare train accuracy
+-   Estimate Real GDP growth rate for 2022Q2 --- 2022Q4
+-   Calculate GDP contraction for the whole year
+
+## The Models
+
+-   **Machine Learning models:**
+    -   Elastic-Net
+    -   Classical linear regression
+    -   Multivariate Adaptive Regression Spline
+    -   Extreme Gradient Boosting
+    -   Bayesian Regularized Neural Network
+-   **Benchmark:**
+    -   ARIMA
+
+## The Data
+
+-   2015Q1 to 2022Q1
+-   Quarterly, seasonaly adjusted
+-   17 macro indicators
+-   Principal components transformation
+
+## Forecasting perfomance of models
+
+Elastic-Net and Gradient boosting provide the best results
+
+::: panel-tabset
+### Plot
+
+```{r}
+# Plot forecast for every model against the original data
+forecast::autoplot(ts_orig) +
+  lapply(seq_along(ts_pred_list), function(i) {autolayer(ts_pred_list[[i]],
+                                                         series = mod_names[i])}) +
+  theme_minimal() +
+  labs(title = "Real-time quarterly GDP growth", x = NULL, y = "Real GDP, growth rate")
+```
+
+### Test accuracy
+
+```{r}
+knitr::kable(round(acc_list[,2:5], 2))
+```
+:::
+
+## GDP contraction {.smaller}
+
+The mean estimated Real GDP shrinkage due to the war is `r round(mean(t(contraction_df)), 2)` %.
+
+```{r}
+# GDP contraction
+knitr::kable(round(contraction_df, 2))
+```
