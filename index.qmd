@@ -8,6 +8,8 @@ format:
     logo: images/KSE.png
 ---
 
+## The GDP will shrink...
+
 ```{r}
 #| echo: false
 #| warning: false
@@ -141,6 +143,8 @@ tuneLength.num <- 5
 #| warning: false
 #| output: false
 
+set.seed(1337)
+
 # Estimate ML models using Principal Components method
 
 # Elastic-Net Regularized Generalized Linear Model
@@ -257,8 +261,6 @@ contraction_df <- as.data.frame(contraction_df)
 colnames(contraction_df) <- mod_names
 contraction_df$arima <- sum(tail(df_full$gdp_real_gr, 4))
 ```
-
-## The GDP will shrink...
 
 ::: {.fragment .fade-in}
 ... by `r round(mean(t(contraction_df)), 2)` % on average.

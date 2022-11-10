@@ -4,7 +4,7 @@
     "href": "index.html#the-gdp-will-shrink",
     "title": "How much Ukrainian economy will contract?",
     "section": "The GDP will shrink…",
-    "text": "The GDP will shrink…\n\n… by -38.93 % on average.\n\n\nThank you for your attention!"
+    "text": "The GDP will shrink…\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n… by -38.93 % on average.\n\n\nThank you for your attention!"
   },
   {
     "objectID": "index.html#my-approach",
@@ -32,7 +32,7 @@
     "href": "index.html#forecasting-perfomance-of-models",
     "title": "How much Ukrainian economy will contract?",
     "section": "Forecasting perfomance of models",
-    "text": "Forecasting perfomance of models\nElastic-Net and Gradient boosting provide the best results\n\nPlotTest accuracy\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nRMSE\nMAE\nMPE\nMAPE\n\n\n\n\nglmnet.mod\n3.54\n2.43\n17.37\n217.63\n\n\nlm.mod\n3.01\n2.12\n47.06\n245.18\n\n\nearth.mod\n3.45\n2.42\n-82.89\n302.09\n\n\nbrnn.mod\n2.35\n1.72\n-20.31\n62.63"
+    "text": "Forecasting perfomance of models\nElastic-Net and Gradient boosting provide the best results\n\nPlotTest accuracy\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nRMSE\nMAE\nMPE\nMAPE\n\n\n\n\nglmnet.mod\n3.54\n2.43\n17.37\n217.63\n\n\nlm.mod\n3.01\n2.12\n47.06\n245.18\n\n\nearth.mod\n3.45\n2.42\n-82.89\n302.09\n\n\nbrnn.mod\n2.35\n1.72\n-20.10\n63.12"
   },
   {
     "objectID": "index.html#gdp-contraction",
