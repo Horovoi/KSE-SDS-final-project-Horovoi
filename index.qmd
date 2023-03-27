@@ -2,9 +2,11 @@
 title: "How much Ukrainian economy will contract?"
 subtitle: "(Spoiler: a lot)"
 author: "Mykyta Horovoi"
+date: 17/06/2022
 format:
   revealjs: 
     slide-number: true
+    scrollable: true
     logo: images/KSE.png
 ---
 
@@ -126,6 +128,8 @@ for(i in 2:length(train_adjust_df)) {
 # Set up parallel computing using 2 cores
 registerDoParallel(cores = 2)
 
+set.seed(1337)
+
 # Set parameters for training models
 myTimeControl <- trainControl(method = "timeslice",
                               initialWindow = 12,
@@ -133,7 +137,7 @@ myTimeControl <- trainControl(method = "timeslice",
                               fixedWindow = FALSE,
                               allowParallel = TRUE,
                               preProcess(train_df, c('scale', 'center', 'pca')),
-                              preProcOptions = list(thresh = 0.95))
+                              preProcOptions = list(thresh = 0.90))
                               #seeds = seeds)
 tuneLength.num <- 5
 ```
@@ -142,8 +146,6 @@ tuneLength.num <- 5
 #| echo: false
 #| warning: false
 #| output: false
-
-set.seed(1337)
 
 # Estimate ML models using Principal Components method
 
@@ -185,6 +187,26 @@ brnn.mod <- train(gdp_real_gr ~ . - Date,
                    tuneLength=tuneLength.num,
                    metric='RMSE',
                    preProcess = c('scale', 'center', 'pca'))
+
+# set parameters to use in a grid search with XGBoost model
+tune_grid <- expand.grid(nrounds=c(100, 200, 300, 400),
+                         max_depth = c(3:7),
+                         eta = c(0.05, 1),
+                         gamma = c(0.01),
+                         colsample_bytree = c(0.75),
+                         subsample = c(0.50),
+                         min_child_weight = c(0))
+
+
+# eXtreme Gradient Boosting
+xgb.mod <- train(gdp_real_gr ~ . - Date,
+                 data = train_adjust_df,
+                 method = "xgbTree",
+                 trControl = myTimeControl,
+                 tuneGrid = tune_grid,
+                 tuneLength=tuneLength.num,
+                 metric = 'RMSE',
+                 preProcess = c('scale', 'center', 'pca'))
 ```
 
 ```{r}
@@ -195,7 +217,8 @@ brnn.mod <- train(gdp_real_gr ~ . - Date,
 resamps <- resamples(list(glmnet = glmnet.mod,
                           lm = lm.mod,
                           earth = earth.mod,
-                          brnn = brnn.mod))
+                          brnn = brnn.mod,
+                          xgb = xgb.mod))
 
 s <- summary(resamps)
 
@@ -211,7 +234,7 @@ dotplot(resamps, metric = "RMSE")
 #| output: false
 
 # Extract model names
-mod_names <- c("glmnet.mod", "lm.mod", "earth.mod", "brnn.mod")
+mod_names <- c("glmnet.mod", "lm.mod", "earth.mod", "brnn.mod", "xgb.mod")
 
 pred_list <- list()
 
@@ -297,14 +320,16 @@ Thank you for your attention!
 
 ## The Data
 
--   2015Q1 to 2022Q1
+-   2015Q1 to 2022Q1 (training set)
 -   Quarterly, seasonaly adjusted
 -   17 macro indicators
 -   Principal components transformation
 
 ## Forecasting perfomance of models
 
-Elastic-Net and Gradient boosting provide the best results
+-   Gradient boosting method provides the best results at the training set
+-   It's impossible to calculate the accuracy on a validation set at the time of this presentation (17 June 2022)
+
 
 ::: panel-tabset
 ### Plot
@@ -327,9 +352,15 @@ knitr::kable(round(acc_list[,2:5], 2))
 
 ## GDP contraction {.smaller}
 
-The mean estimated Real GDP shrinkage due to the war is `r round(mean(t(contraction_df)), 2)` %.
+-   The mean estimated Real GDP shrinkage due to the war is `r round(mean(t(contraction_df)), 2)` %.
 
 ```{r}
 # GDP contraction
 knitr::kable(round(contraction_df, 2))
 ```
+
+-   **Post presentation update (27 March 2023):**
+    -   According to preliminary estimates of the Ministry of Economy of Ukraine, the GDP decline in 2022 is estimated at 30.4% ^[[Ministry of Economy of Ukraine, posted 05 January 2023](https://www.kmu.gov.ua/en/news/minekonomiky-poperedno-otsiniuie-padinnia-vvp-v-2022-rotsi-na-rivni-304)].
+    -   Thus, the forecast error on a validation data is **`r round(mean(t(contraction_df)), 2) + 30.4` %**.
+
+
