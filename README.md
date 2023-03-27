@@ -4,4 +4,8 @@ My goal is to estimate a contraction of Ukrainian GDP due to russian invasion us
 
 For this project, I use quarterly data on 17 macroeconomics indicators. Time series were seasonaly adjusted if necessary. Sources for the data are National Bank of Ukraine and State Statistical Service of Ukraine.
 
-It is estimated that mean estimated Real GDP shrinkage in 2022 due to the war is -38.93% comparing to 2021.
+It is estimated that mean estimated Real GDP shrinkage in 2022 due to the war is -33.8% comparing to 2021.
+
+Post presentation update (27 March 2023):
+- According to preliminary estimates of the Ministry of Economy of Ukraine, the GDP decline in 2022 is [estimated](https://www.kmu.gov.ua/en/news/minekonomiky-poperedno-otsiniuie-padinnia-vvp-v-2022-rotsi-na-rivni-304) at 30.4%.
+- Thus, the forecast error on a validation data is -3.4%.
