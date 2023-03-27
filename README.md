@@ -10,6 +10,8 @@ It is estimated that mean estimated Real GDP shrinkage in 2022 due to the war is
 
 Project's slides are available at *Environments -> github-pages* or via [*this link*](https://horovoi.github.io/final-project-Horovoi/).
 
+The project is made in R, slides are prepared with [Quarto](https://quarto.org).
+
 **Post presentation update (27 March 2023):**
 - According to preliminary estimates of the Ministry of Economy of Ukraine, the GDP decline in 2022 is [estimated](https://www.kmu.gov.ua/en/news/minekonomiky-poperedno-otsiniuie-padinnia-vvp-v-2022-rotsi-na-rivni-304) at **30.4%**.
 - Thus, the forecast error on a validation data is **-3.4%**.
