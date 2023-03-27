@@ -8,7 +8,7 @@ For this project, I use quarterly data on 17 macroeconomics indicators. Time ser
 
 It is estimated that mean estimated Real GDP shrinkage in 2022 due to the war is **-33.8%** comparing to 2021.
 
-Project's slides are available at *Environments -> github-pages* or via [*this link*](https://github.com/Horovoi/final-project-Horovoi/deployments/activity_log?environment=github-pages).
+Project's slides are available at *Environments -> github-pages* or via [*this link*](https://horovoi.github.io/final-project-Horovoi/).
 
 **Post presentation update (27 March 2023):**
 - According to preliminary estimates of the Ministry of Economy of Ukraine, the GDP decline in 2022 is [estimated](https://www.kmu.gov.ua/en/news/minekonomiky-poperedno-otsiniuie-padinnia-vvp-v-2022-rotsi-na-rivni-304) at **30.4%**.
