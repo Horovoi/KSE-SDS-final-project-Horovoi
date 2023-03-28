@@ -8,7 +8,7 @@ For this project, I use quarterly data on 17 macroeconomics indicators. Time ser
 
 It is estimated that mean estimated Real GDP shrinkage in 2022 due to the war is **-33.8%** comparing to 2021.
 
-Project's slides are available at *Environments -> github-pages* or via [*this link*](https://horovoi.github.io/final-project-Horovoi/).
+Project's slides are available at *Environments -> github-pages*.
 
 The project is made in R, slides are prepared with [Quarto](https://quarto.org).
 
